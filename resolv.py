@@ -33,6 +33,7 @@ Usage:
 import shutil
 import subprocess
 import sys
+import textwrap
 from collections import defaultdict
 
 WHOIS_COLUMN_DEFS = (
@@ -191,12 +192,35 @@ def build_rows(hostname):
 
 
 def print_table(headers, rows):
-    """Render ASCII table."""
+    """Render ASCII table with text wrapping to fit terminal width."""
+    term_width = shutil.get_terminal_size().columns
+    n = len(headers)
 
-    widths = [
+    natural_widths = [
         max(len(str(item)) for item in column)
         for column in zip(headers, *rows)
     ]
+
+    # Total table width = left border (1) + each column (w + 2) + separators (n)
+    def total_width(widths):
+        return 1 + 3 * n + sum(widths)
+
+    widths = natural_widths[:]
+
+    if total_width(widths) > term_width:
+        available = term_width - 1 - 3 * n
+        if available > 0:
+            natural_sum = sum(natural_widths)
+            widths = [
+                max(1, int(w * available / natural_sum))
+                for w in natural_widths
+            ]
+
+    def wrap_cell(text, width):
+        text = str(text)
+        if len(text) <= width:
+            return [text]
+        return textwrap.wrap(text, width) or [text[:width]]
 
     def border():
         print(
@@ -206,14 +230,17 @@ def print_table(headers, rows):
         )
 
     def row(items):
-        print(
-            "|" +
-            "|".join(
-                f" {str(item):<{widths[i]}} "
-                for i, item in enumerate(items)
-            ) +
-            "|"
-        )
+        wrapped = [wrap_cell(str(item), widths[i]) for i, item in enumerate(items)]
+        height = max(len(lines) for lines in wrapped)
+        for line_idx in range(height):
+            print(
+                "|" +
+                "|".join(
+                    f" {(wrapped[i][line_idx] if line_idx < len(wrapped[i]) else ''):<{widths[i]}} "
+                    for i in range(len(items))
+                ) +
+                "|"
+            )
 
     border()
     row(headers)
