@@ -66,6 +66,16 @@ Or with Python explicitly:
 	python3 resolv.py example.com
 	python3 resolv.py 8.8.8.8
 
+## Quick Start (Copy/Paste)
+
+Use this block to clone the repo into `~/tools`, add a `resolv` alias in `~/.zshrc`, and load it immediately:
+
+	mkdir -p ~/tools
+	git clone https://github.com/mullliam/resolv.git ~/tools/resolv
+	touch ~/.zshrc
+	grep -q "^alias resolv=" ~/.zshrc || echo "alias resolv='python3 \$HOME/tools/resolv/resolv.py'" >> ~/.zshrc
+	source ~/.zshrc
+
 ## Add A Global resolv Alias (macOS zsh)
 
 If you want to run resolv from any directory using the command resolv, add an alias to your shell config.
