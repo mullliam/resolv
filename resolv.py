@@ -7,6 +7,8 @@ Resolve a hostname, follow any CNAME chain, retrieve all A records,
 perform PTR lookups on each IP, run WHOIS lookups, and group IPs that
 share the same WHOIS information.
 
+For direct IP input, perform PTR and WHOIS lookups only.
+
 WHOIS fields extracted (adaptive):
     - OrgName
     - Organization
@@ -27,9 +29,10 @@ Requirements:
     - whois command available
 
 Usage:
-    ./resolv.py example.com
+    ./resolv.py <hostname_or_ip>
 """
 
+import ipaddress
 import shutil
 import subprocess
 import sys
@@ -191,6 +194,35 @@ def build_rows(hostname):
     return cname_chain, active_whois_fields, rows
 
 
+def build_rows_for_ip(ip):
+    """Build output rows for direct IP lookup (PTR + WHOIS only)."""
+    ptr = get_ptr(ip)
+    whois = get_whois(ip)
+
+    key = tuple(whois[field] for field in WHOIS_HEADERS)
+
+    active_whois_fields = [
+        field
+        for idx, field in enumerate(WHOIS_HEADERS)
+        if key[idx]
+    ]
+    field_index = {field: idx for idx, field in enumerate(WHOIS_HEADERS)}
+
+    row = [ip, ptr]
+    row.extend(key[field_index[field]] for field in active_whois_fields)
+
+    return active_whois_fields, [row]
+
+
+def is_ip_address(value):
+    """Return True if value is an IPv4 or IPv6 address."""
+    try:
+        ipaddress.ip_address(value)
+        return True
+    except ValueError:
+        return False
+
+
 def print_table(headers, rows):
     """Render ASCII table with text wrapping to fit terminal width."""
     term_width = shutil.get_terminal_size().columns
@@ -254,7 +286,7 @@ def print_table(headers, rows):
 
 def main():
     if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <hostname>")
+        print(f"Usage: {sys.argv[0]} <hostname_or_ip>")
         sys.exit(1)
 
     if not shutil.which("dig"):
@@ -265,25 +297,32 @@ def main():
         print("Error: whois command not found")
         sys.exit(1)
 
-    hostname = sys.argv[1]
+    target = sys.argv[1]
 
-    cname_chain, active_whois_fields, rows = build_rows(hostname)
-
-    if not rows:
-        print("No A records found")
-        sys.exit(1)
-
-    if cname_chain:
+    if is_ip_address(target):
+        active_whois_fields, rows = build_rows_for_ip(target)
         headers = [
-            "CNAME Relationship",
             "IP(s)",
             "PTR Hostname(s)",
         ]
     else:
-        headers = [
-            "IP(s)",
-            "PTR Hostname(s)",
-        ]
+        cname_chain, active_whois_fields, rows = build_rows(target)
+
+        if not rows:
+            print("No A records found")
+            sys.exit(1)
+
+        if cname_chain:
+            headers = [
+                "CNAME Relationship",
+                "IP(s)",
+                "PTR Hostname(s)",
+            ]
+        else:
+            headers = [
+                "IP(s)",
+                "PTR Hostname(s)",
+            ]
 
     headers.extend(active_whois_fields)
 
