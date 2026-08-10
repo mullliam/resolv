@@ -68,21 +68,13 @@ Or with Python explicitly:
 
 ## Quick Start (Copy/Paste)
 
-Run this block to install `resolv` into `~/tools/resolv`, add/update a `resolv` alias in the user aliases section of `~/.zshrc`, and reload your shell:
+Use this block to clone/update the repo in `~/tools`, add a `resolv` alias in `~/.zshrc`, and load it immediately:
 
-	mkdir -p "$HOME/tools" && \
-	if [ -d "$HOME/tools/resolv/.git" ]; then git -C "$HOME/tools/resolv" pull --ff-only; else git clone https://github.com/mullliam/resolv.git "$HOME/tools/resolv"; fi && \
-	chmod +x "$HOME/tools/resolv/resolv.py" && \
-	touch "$HOME/.zshrc" && \
-	alias_line="alias resolv='$HOME/tools/resolv/resolv.py'" && \
-	if grep -q '^alias resolv=' "$HOME/.zshrc"; then \
-		sed -i '' "s|^alias resolv=.*|$alias_line|" "$HOME/.zshrc"; \
-	elif grep -q '^# User aliases$' "$HOME/.zshrc"; then \
-		awk -v line="$alias_line" '{ print; if ($0=="# User aliases" && !done) { print line; done=1 } }' "$HOME/.zshrc" > "$HOME/.zshrc.tmp" && mv "$HOME/.zshrc.tmp" "$HOME/.zshrc"; \
-	else \
-		printf '\n# User aliases\n%s\n' "$alias_line" >> "$HOME/.zshrc"; \
-	fi && \
-	source "$HOME/.zshrc"
+	mkdir -p ~/tools
+	git clone https://github.com/mullliam/resolv.git ~/tools/resolv 2>/dev/null || git -C ~/tools/resolv pull --ff-only
+	touch ~/.zshrc
+	grep -q "^alias resolv=" ~/.zshrc || echo "alias resolv='python3 \$HOME/tools/resolv/resolv.py'" >> ~/.zshrc
+	source ~/.zshrc
 
 ## Add A Global resolv Alias (macOS zsh)
 
