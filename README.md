@@ -68,10 +68,10 @@ Or with Python explicitly:
 
 ## Quick Start (Copy/Paste)
 
-Use this block to clone/update the repo in `~/tools`, add a `resolv` alias in `~/.zshrc`, and load it immediately:
+Use this block to clone the repo into `~/tools`, add a `resolv` alias in `~/.zshrc`, and load it immediately:
 
 	mkdir -p ~/tools
-	git clone https://github.com/mullliam/resolv.git ~/tools/resolv 2>/dev/null || git -C ~/tools/resolv pull --ff-only
+	git clone https://github.com/mullliam/resolv.git ~/tools/resolv
 	touch ~/.zshrc
 	grep -q "^alias resolv=" ~/.zshrc || echo "alias resolv='python3 \$HOME/tools/resolv/resolv.py'" >> ~/.zshrc
 	source ~/.zshrc
