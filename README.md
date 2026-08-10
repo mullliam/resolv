@@ -66,6 +66,24 @@ Or with Python explicitly:
 	python3 resolv.py example.com
 	python3 resolv.py 8.8.8.8
 
+## Quick Start (Copy/Paste)
+
+Run this block to install `resolv` into `~/tools/resolv`, add/update a `resolv` alias in the user aliases section of `~/.zshrc`, and reload your shell:
+
+	mkdir -p "$HOME/tools" && \
+	if [ -d "$HOME/tools/resolv/.git" ]; then git -C "$HOME/tools/resolv" pull --ff-only; else git clone https://github.com/mullliam/resolv.git "$HOME/tools/resolv"; fi && \
+	chmod +x "$HOME/tools/resolv/resolv.py" && \
+	touch "$HOME/.zshrc" && \
+	alias_line="alias resolv='$HOME/tools/resolv/resolv.py'" && \
+	if grep -q '^alias resolv=' "$HOME/.zshrc"; then \
+		sed -i '' "s|^alias resolv=.*|$alias_line|" "$HOME/.zshrc"; \
+	elif grep -q '^# User aliases$' "$HOME/.zshrc"; then \
+		awk -v line="$alias_line" '{ print; if ($0=="# User aliases" && !done) { print line; done=1 } }' "$HOME/.zshrc" > "$HOME/.zshrc.tmp" && mv "$HOME/.zshrc.tmp" "$HOME/.zshrc"; \
+	else \
+		printf '\n# User aliases\n%s\n' "$alias_line" >> "$HOME/.zshrc"; \
+	fi && \
+	source "$HOME/.zshrc"
+
 ## Add A Global resolv Alias (macOS zsh)
 
 If you want to run resolv from any directory using the command resolv, add an alias to your shell config.
